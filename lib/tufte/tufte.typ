@@ -400,7 +400,7 @@
   )
 }
 
-// Epigraph (opening quote)
+// Epigraph (opening quote) - single epigraph
 #let epigraph(content, source: none) = {
   context {
     let output-format = output-format-state.get()
@@ -438,6 +438,39 @@
   }
 }
 
+// Epigraphs - multiple epigraphs wrapped in div.epigraph
+// Takes an array of dictionaries with 'content' and optional 'source' keys
+#let epigraphs(items) = {
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Wrap all epigraphs in div.epigraph
+      [
+        #html.elem("div", attrs: ("class": "epigraph"))[
+          #for item in items [
+            #html.elem("blockquote")[
+              #set text(style: "italic")
+              #set par(first-line-indent: 0em)
+              #item.content
+              #if "source" in item and item.source != none [
+                #html.elem("footer")[
+                  #text(style: "normal")[— #item.source]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+      v(1em)
+    } else {
+      // PDF: Render each epigraph separately
+      for item in items {
+        epigraph(item.content, source: item.get("source", none))
+      }
+    }
+  }
+}
+
 // New thought - first few words in small caps
 #let newthought(content) = {
   context {
@@ -450,6 +483,23 @@
     } else {
       // PDF: Just apply small caps
       smallcaps[#content]
+    }
+  }
+}
+
+// Sans-serif paragraph - applies the "sans" class in HTML mode
+#let sans(content) = {
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Wrap in paragraph with class="sans"
+      html.elem("p", attrs: ("class": "sans"))[
+        #content
+      ]
+    } else {
+      // PDF: Just render the content with sans-serif font
+      set text(font: ("Gill Sans", "Arial", "Helvetica", "sans-serif"))
+      content
     }
   }
 }
