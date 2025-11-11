@@ -118,7 +118,7 @@
 // Create format-aware margin note functions
 #let create-margin-functions(output-format) = {
   (
-    sidenote: (content) => {
+    sidenote: (note) => {
       context {
         let output-format = output-format-state.get()
         if output-format == "html" {
@@ -127,18 +127,20 @@
           let num = sidenote-counter.display()
           let id-str = "sn-" + str(num)
           
-          [
+          box[
             #html.elem("label", attrs: ("for": id-str, "class": "margin-toggle sidenote-number"))[]
             #html.elem("input", attrs: ("type": "checkbox", id: id-str, "class": "margin-toggle"))[]
-            #html.elem("span", attrs: ("class": "sidenote"))[
-              #content
-            ]
+          ]
+          html.elem("span", attrs: ("class": "sidenote"))[
+            #note
           ]
         } else {
           // PDF: Place in right margin with numbering
           sidenote-counter.step()
           let num = sidenote-counter.display()
+          
           [
+            #super[#num]
             #place(
               right + top,
               dx: 0.5in,
@@ -146,10 +148,9 @@
               scope: "parent",
               block(
                 width: 2in,
-                text(size: 9pt, fill: rgb("#111111"))[#num. #content]
+                text(size: 9pt, fill: rgb("#111111"))[#num. #note]
               )
             )
-            #super[#num]
           ]
         }
       }
@@ -163,12 +164,12 @@
           let id-num = margin-note-id-counter.display()
           let id-str = "mn-" + str(id-num)
           
-          [
+          box[
             #html.elem("label", attrs: ("for": id-str, "class": "margin-toggle"))[⊕]
             #html.elem("input", attrs: ("type": "checkbox", id: id-str, "class": "margin-toggle"))[]
-            #html.elem("span", attrs: ("class": "marginnote"))[
-              #content
-            ]
+          ]
+          html.elem("span", attrs: ("class": "marginnote"))[
+            #content
           ]
         } else {
           // PDF: Place in right margin without numbering
@@ -439,5 +440,16 @@
 
 // New thought - first few words in small caps
 #let newthought(content) = {
-  smallcaps[#content]
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Generate proper span with class="newthought"
+      html.elem("span", attrs: ("class": "newthought"))[
+        #smallcaps[#content]
+      ]
+    } else {
+      // PDF: Just apply small caps
+      smallcaps[#content]
+    }
+  }
 }
