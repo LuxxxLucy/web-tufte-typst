@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://edwardtufte.github.io/tufte-css/tufte.css"/>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Typesetting Tufte Handout in Typst to HTML</title>
+    <meta name="authors" content="Jialin Lu">
+  </head>
+  <body>
+    <article>
+      <h1 id="typesetting-tufte-handout-in-typst-to-html">Typesetting Tufte Handout in Typst to HTML</h1>
+      <p class="subtitle">Jialin Lu &lt;<a href="mailto:luxxxlucy@gmail.com">luxxxlucy@gmail.com</a>></p>
+      <p>2025-11-11</p>
+      <section>
+        <p>No one dislikes <a href="https://www.edwardtufte.com/tufte/">Edward Tufte</a> and his handout, and for many years I have believed (and still do) that the Tufte handout is the most comfortable visual layout for writing highly efficient documents. It just works.</p>
+        <p><a href="https://typst.app/">Typst</a> is a modern typesetting system, to which I have contributed some minor features including line decorations and numbering and some others. It is, …, good at what it does. The main advantage of Typst over LaTeX is that it is modern and quick—thanks to a good cache mechanism and incremental compilation.<span style="display: inline-block"><label for="sn-0" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-0" class="margin-toggle"></span><span class="sidenote">Martin Haug’s master thesis: <a href="https://mha.ug/post/get-my-other-thesis/"><em>Fast Typesetting with Incremental Compilation</em></a>. You should read it; it is an interesting read</span></p>
+        <p>I’ve always wanted to write in Typst and export decent HTML, as now everything should be good on the web. Previously, I would either write directly in HTML with <a href="https://edwardtufte.github.io/tufte-css/">Tufte CSS</a> (it is not as bad as it might sound), or use <a href="https://rmarkdown.rstudio.com/tufte_handout_format.html">R Markdown</a> to get HTML typeset in a Tufte handout style. But I do not particularly like this workflow. Sometimes I would instead simply embed PDFs in a site page.</p>
+        <p>Luckily, <span style="display: inline-block"><label for="mn-0" class="margin-toggle">⊕</label><input type="checkbox" id="mn-0" class="margin-toggle"></span><span class="marginnote">The source code is available at <a href="https://github.com/LuxxxLucy/web-tufte-typst"><a href="https://github.com/luxxxlucy/web-tufte-typst">https://github.com/luxxxlucy/web-tufte-typst</a></a>.</span> Typst 0.13 now provides experimental HTML export support. It is not feature complete out of the box, but it is usable. So I semi-vibe coded a simple proof of concept that demonstrates it is in fact possible to write in Typst and output to HTML rather decently. I think I will it mainly for writing my blogs in the future.</p>
+        <p>I also included a reproduction of the Tufte CSS documentation. See <code>examples/tufte-css-reproduce/tufte-css-reproduce.typ</code> for the complete reproduction. The output should be almost identical to official Tufte-CSS <a href="https://edwardtufte.github.io/tufte-css/">https://edwardtufte.github.io/tufte-css/</a> anyway it is just some simple mark up and conversion.</p>
+        <p>Major notes:</p>
+        <ol>
+          <li value="1">
+            <p><strong>CSS injection with sed.</strong> Currently, Typst does not support modifying or adding CSS stylesheet references in the generated HTML, so it must be done manually. You must use the <code>compile-html.sh</code> script to generate HTML output. The script compiles your Typst document to HTML and then automatically injects the Tufte CSS stylesheet link.</p>
+          </li>
+          <li value="2">
+            <p><strong>Section structure.</strong> So far I have not found a good way to wrap paragraphs of a section inside <code>&lt;section>&lt;/section></code> tags, and so you will notice that the margin space on top and after a section heading is often not enough.</p>
+          </li>
+          <li value="3">
+            <p><a href="https://typst.app/docs/reference/layout/box/">box</a> function is quite useful to enforce inline elements; To be honest, have not really uses this before but found it quite handy in keeping to the css class markups.</p>
+          </li>
+          <li value="4">
+            <p>the toggle button is not quite working. So this nice feature that works quite well in mobile device is missing here.</p>
+          </li>
+        </ol>
+        <p>Starting from below I will show with example on the basic primitives and their usage.</p>
+        <h2>Features</h2>
+        <h3>Start Document</h3>
+        <p>To begin, import the template and configure your document with title, author, and date:</p>
+        <pre><code data-lang="typst"><span style="color: #d73948">#</span><span style="color: #d73948">import</span> <span style="color: #198810">"lib/web-tufte-typst.typ"</span>: <span style="color: #d73948">*</span><br><br><span style="color: #d73948">#</span><span style="color: #d73948">show</span>: web-tufte-typst.<span style="color: #4b69c6">with</span>(<br>  title: [Your Document Title],<br>  author: (name: <span style="color: #198810">"Your Name"</span>, email: <span style="color: #198810">"your.email@example.com"</span>),<br>  date: datetime.<span style="color: #4b69c6">today</span>().<span style="color: #4b69c6">display</span>(),<br>)</code></pre>
+        <p>The <code>author</code> parameter accepts a dictionary with <code>name</code> and optional <code>email</code>. The email will be displayed as a clickable mailto link in the subtitle. The <code>date</code> can use Typst’s <code>datetime.today()</code> function for automatic date generation, or you can provide a custom date string.</p>
+        <h3>Sidenotes</h3>
+        <p>Sidenotes provide numbered references in the margin. They appear in the margin on large screens and can be toggled on small screens.</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">sidenote</span>[This is a sidenote. It appears in the margin on large screens and can be toggled on small screens.]</code></pre>
+        <p>Example sidenote appearing in margin.<span style="display: inline-block"><label for="sn-1" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-1" class="margin-toggle"></span><span class="sidenote">This is a sidenote. It appears in the margin on large screens and can be toggled on small screens.</span></p>
+        <p>Example with multiple numbered sidenotes.<span style="display: inline-block"><label for="sn-2" class="margin-toggle sidenote-number"></label><input type="checkbox" id="sn-2" class="margin-toggle"></span><span class="sidenote">You can have multiple sidenotes throughout your document. Each gets automatically numbered.</span></p>
+        <h3>Margin Notes</h3>
+        <p>Margin notes are like sidenotes but without numbers. They’re useful for asides that don’t need explicit reference.</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">marginnote</span>[This is a margin note. Notice there's no number.]</code></pre>
+        <p>Example margin note without number:<span style="display: inline-block"><label for="mn-1" class="margin-toggle">⊕</label><input type="checkbox" id="mn-1" class="margin-toggle"></span><span class="marginnote">This is a margin note. Notice there’s no number.</span></p>
+        <h3>Figures</h3>
+        <p>Tufte emphasizes tight integration of graphics with text. Use <code>tufte-figure()</code> for main column figures:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">tufte-figure</span>(<br>  <span style="color: #198810">"img/exports-imports.png"</span>,<br>  caption: [From Edward Tufte, <em>_</em><em>Visual Display of Quantitative Information</em><em>_</em>, page 92.],<br>  caption-as-marginnote: <span style="color: #d73948">true</span><br>)</code></pre>
+        <p>Example with caption as margin note:</p>
+        <figure>
+          <label for="mn-fig-2" class="margin-toggle">⊕</label><input type="checkbox" id="mn-fig-2" class="margin-toggle">
+          <p><span class="marginnote">From Edward Tufte, <em>Visual Display of Quantitative Information</em>, page 92.</span></p>
+          <img src="img/exports-imports.png" alt>
+        </figure>
+        <p>For margin figures:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">marginfigure</span>(<br>  <span style="color: #198810">"img/rhino.png"</span>,<br>  caption: [Image of a Rhinoceros — F.J. Cole, "The History of Albrecht Dürer's Rhinoceros in Zoological Literature."]<br>)</code></pre>
+        <p>Example margin figure:</p>
+        <label for="mn-fig-3" class="margin-toggle">⊕</label><input type="checkbox" id="mn-fig-3" class="margin-toggle">
+        <p><span class="marginnote"><span style="display: inline-block"><img src="img/rhino.png" alt></span><span style="white-space: pre-wrap">&#x20;</span>Image of a Rhinoceros — F.J. Cole, “The History of Albrecht Dürer’s Rhinoceros in Zoological Literature.”</span></p>
+        <p>For full-width figures:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">tufte-fullwidth-figure</span>(<br>  <span style="color: #198810">"img/napoleons-march.png"</span>,<br>  caption: [Figurative map of the successive losses of the French Army in the Russian campaign, 1812-1813]<br>)</code></pre>
+        <p>Example full-width figure:</p>
+        <figure class="fullwidth">
+          <img src="img/napoleons-march.png" alt>
+          <figcaption>Figurative map of the successive losses of the French Army in the Russian campaign, 1812-1813</figcaption>
+        </figure>
+        <h3>Epigraphs</h3>
+        <p>Epigraphs are opening quotes, perfect for section introductions:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">epigraph</span>(<br>  [Your quote text],<br>  source: [Source attribution]<br>)</code></pre>
+        <p>Example single epigraph:</p>
+        <blockquote>
+          <p>The English language . . . becomes ugly and inaccurate because our thoughts are foolish, but the slovenliness of our language makes it easier for us to have foolish thoughts.</p>
+          <footer>— George Orwell, “Politics and the English Language”</footer>
+        </blockquote>
+        <p>For multiple quotes:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">epigraphs</span>((<br>  (content: [For a successful technology, reality must take precedence over public relations, for Nature cannot be fooled.], source: [Richard P. Feynman, "What Do You Care What Other People Think?"]),<br>  (content: [I do not paint things, I paint only the differences between things.], source: [Henri Matisse, <em>_</em><em>Henri Matisse Dessins</em><em>:</em><em> </em><em>thèmes et variations</em><em>_</em> (Paris, 1943), 37])<br>))</code></pre>
+        <p>Example multiple epigraphs:</p>
+        <div class="epigraph">
+          <blockquote>
+            <p>For a successful technology, reality must take precedence over public relations, for Nature cannot be fooled.</p>
+            <footer>— Richard P. Feynman, “What Do You Care What Other People Think?”</footer>
+          </blockquote>
+          <blockquote>
+            <p>I do not paint things, I paint only the differences between things.</p>
+            <footer>— Henri Matisse, <em>Henri Matisse Dessins: thèmes et variations</em> (Paris, 1943), 37</footer>
+          </blockquote>
+        </div>
+        <h3>Typography</h3>
+        <p>Use <code>newthought</code> to start a section with small caps:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">newthought</span>[This paragraph starts with small caps.]</code></pre>
+        <p>Example newthought with small caps:</p>
+        <p><span class="newthought"><span style="font-variant-caps: small-caps">This paragraph starts with small caps.</span></span> The first few words are styled to draw attention.</p>
+        <p>Use <code>sans</code> for sans-serif text:</p>
+        <pre><code data-lang="typst"><span style="color: #4b69c6">#</span><span style="color: #4b69c6">sans</span>[This text uses sans-serif styling.]</code></pre>
+        <p>Example sans-serif paragraph:</p>
+        <p class="sans">This text uses sans-serif styling.</p>
+        <h2>Usage</h2>
+        <p>Set the output format:</p>
+        <pre><code data-lang="typst"><span style="color: #d73948">#</span><span style="color: #d73948">show</span>: web-tufte-typst.<span style="color: #4b69c6">with</span>(<br>  title: [Your Title],<br>  authors: ((name: <span style="color: #198810">"Author Name"</span>),),<br>  <span style="color: #74747c">// output-format defaults to "html", set to "pdf" for PDF output</span><br>)</code></pre>
+        <p>Compile to HTML (requires the script to inject CSS):</p>
+        <pre><code data-lang="bash"><span style="color: #4b69c6">./compile-html.sh</span> examples/introduction/introduction.typ</code></pre>
+        <p>The <code>compile-html.sh</code> script is necessary because it:</p>
+        <ol>
+          <li value="1">Compiles your Typst document to HTML using <code>typst compile --format html</code></li>
+          <li value="2">Automatically injects the Tufte CSS link and viewport meta tag into the HTML <code>&lt;head></code></li>
+        </ol>
+        <p>Without this script, the HTML will be generated but won’t have the Tufte CSS styling applied.</p>
+        <h2>Learn More</h2>
+        <p>See <code>examples/tufte-css-reproduce/tufte-css-reproduce.typ</code> for a complete reproduction of the Tufte CSS documentation.</p>
+      </section>
+    </article>
+  </body>
+</html>
