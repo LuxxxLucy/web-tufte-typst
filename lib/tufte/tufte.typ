@@ -1,4 +1,4 @@
-// Lucy-Tufte Template for Typst
+// Web-Tufte-Typst Template for Typst
 // A modern Tufte-inspired template supporting both PDF and HTML output
 // Uses official Tufte CSS for web output
 // Uses html.elem() for HTML structure (built-in, no import needed)
@@ -25,7 +25,7 @@
 }
 
 // Configure document-level settings
-#let lucy-tufte-config(output-format: "pdf") = {
+#let web-tufte-typst-config(output-format: "html") = {
   // Typography - matching Tufte style
   // Note: ET Book font registration requires Typst 0.11+ font discovery
   // For now, using system fonts that match Tufte style
@@ -99,7 +99,7 @@
 }
 
 // Page setup for PDF (call this before show rule)
-#let lucy-tufte-page() = {
+#let web-tufte-typst-page() = {
   set page(
     paper: "us-letter",
     margin: (left: 1in, right: 2.5in, top: 1in, bottom: 1in),
@@ -113,7 +113,7 @@
 #let margin-note-id-counter = counter("margin-note-id")
 
 // Output format state (accessible from functions)
-#let output-format-state = state("output-format", "pdf")
+#let output-format-state = state("output-format", "html")
 
 // Create format-aware margin note functions
 #let create-margin-functions(output-format) = {
@@ -188,66 +188,21 @@
         }
       }
     },
-    marginfigure: (img, caption: none) => {
-      context {
-        let output-format = output-format-state.get()
-        if output-format == "html" {
-          // HTML: Wrap in margin note structure using html.elem()
-          margin-note-id-counter.step()
-          let id-num = margin-note-id-counter.display()
-          let id-str = "mn-fig-" + str(id-num)
-          
-          [
-            #html.elem("label", attrs: ("for": id-str, "class": "margin-toggle"))[⊕]
-            #html.elem("input", attrs: ("type": "checkbox", id: id-str, "class": "margin-toggle"))[]
-            #html.elem("span", attrs: ("class": "marginnote"))[
-              #img
-              #if caption != none [
-                #html.elem("figcaption")[
-                  #caption
-                ]
-              ]
-            ]
-          ]
-        } else {
-          // PDF: Place in right margin
-          [
-            #place(
-              right + top,
-              dx: 0.5in,
-              float: true,
-              scope: "parent",
-              block(
-                width: 2in,
-                [
-                  #img
-                  #if caption != none [
-                    #v(0.3em)
-                    #text(size: 9pt)[#caption]
-                  ]
-                ]
-              )
-            )
-          ]
-        }
-      }
-    },
   )
 }
 
-// Default functions (PDF mode)
-#let margin-funcs = create-margin-functions("pdf")
+// Default functions (HTML mode)
+#let margin-funcs = create-margin-functions("html")
 #let sidenote = margin-funcs.sidenote
 #let marginnote = margin-funcs.marginnote
-#let marginfigure = margin-funcs.marginfigure
 
 // Main template function
-#let lucy-tufte(
+#let web-tufte-typst(
   title: none,
   authors: (),
   date: none,
   abstract: none,
-  output-format: "pdf",
+  output-format: "html",
   body,
 ) = {
   // Set output format in state (functions will read from this)
@@ -267,11 +222,11 @@
   set document(title: title, author: author-names)
   
   // Apply typography
-  lucy-tufte-config(output-format: output-format)
+  web-tufte-typst-config(output-format: output-format)
   
   // Apply page config for PDF
   if output-format == "pdf" {
-    lucy-tufte-page()
+    web-tufte-typst-page()
   }
   
   if output-format == "html" {
@@ -383,21 +338,155 @@
   }
 }
 
-// Full width figure
+// Figure function - handles both PDF and HTML
+// Note: For PDF, we need to use a different name to avoid recursion
+// Users should use #tufte-figure() in their documents
+#let tufte-figure(path, caption: none, caption-as-marginnote: false) = {
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Generate proper figure structure with img tag
+      let img-tag = html.elem("img", attrs: (
+        "src": path,
+        "alt": ""
+      ))[]
+      
+      if caption-as-marginnote and caption != none {
+        // Use margin note structure inside figure (like reference HTML)
+        margin-note-id-counter.step()
+        let id-num = margin-note-id-counter.display()
+        let id-str = "mn-fig-" + str(id-num)
+        
+        [
+          #html.elem("figure")[
+            #html.elem("label", attrs: ("for": id-str, "class": "margin-toggle"))[⊕]
+            #html.elem("input", attrs: ("type": "checkbox", id: id-str, "class": "margin-toggle"))[]
+            #html.elem("span", attrs: ("class": "marginnote"))[
+              #caption
+            ]
+            #img-tag
+          ]
+        ]
+      } else {
+        [
+          #html.elem("figure")[
+            #img-tag
+            #if caption != none [
+              #html.elem("figcaption")[
+                #caption
+              ]
+            ]
+          ]
+        ]
+      }
+    } else {
+      // PDF: Use Typst's built-in figure function
+      figure(
+        path,
+        caption: caption,
+      )
+    }
+  }
+}
+
+// Margin figure - figure in margin note
+#let marginfigure(path, caption: none) = {
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Generate margin figure structure with img tag
+      margin-note-id-counter.step()
+      let id-num = margin-note-id-counter.display()
+      let id-str = "mn-fig-" + str(id-num)
+      
+      let img-tag = html.elem("img", attrs: (
+        "src": path,
+        "alt": ""
+      ))[]
+      
+      [
+        #html.elem("label", attrs: ("for": id-str, "class": "margin-toggle"))[⊕]
+        #html.elem("input", attrs: ("type": "checkbox", id: id-str, "class": "margin-toggle"))[]
+        #html.elem("span", attrs: ("class": "marginnote"))[
+          #box[
+            #img-tag
+          ]
+          #caption
+        ]
+      ]
+    } else {
+      // PDF: Place in right margin
+      [
+        #place(
+          right + top,
+          dx: 0.5in,
+          float: true,
+          scope: "parent",
+          block(
+            width: 2in,
+            [
+              #image(path)
+              #if caption != none [
+                #v(0.3em)
+                #text(size: 9pt)[#caption]
+              ]
+            ]
+          )
+        )
+      ]
+    }
+  }
+}
+
+// Full width figure wrapper
 #let fullwidth(content) = {
-  block(
-    width: 100% + 2.5in,
-    breakable: false,
-    content
-  )
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Wrap in div with fullwidth class
+      html.elem("div", attrs: ("class": "fullwidth"))[
+        #content
+      ]
+    } else {
+      // PDF: Use block with extended width
+      block(
+        width: 100% + 2.5in,
+        breakable: false,
+        content
+      )
+    }
+  }
 }
 
 // Full-width figure with caption
-#let fullwidth-figure(img, caption: none) = {
-  figure(
-    block(width: 100% + 2.5in, img),
-    caption: caption,
-  )
+#let tufte-fullwidth-figure(path, caption: none) = {
+  context {
+    let output-format = output-format-state.get()
+    if output-format == "html" {
+      // HTML: Generate figure with fullwidth class and img tag
+      let img-tag = html.elem("img", attrs: (
+        "src": path,
+        "alt": ""
+      ))[]
+      
+      [
+        #html.elem("figure", attrs: ("class": "fullwidth"))[
+          #img-tag
+          #if caption != none [
+            #html.elem("figcaption")[
+              #caption
+            ]
+          ]
+        ]
+      ]
+    } else {
+      // PDF: Use block with extended width
+      figure(
+        block(width: 100% + 2.5in, image(path)),
+        caption: caption,
+      )
+    }
+  }
 }
 
 // Epigraph (opening quote) - single epigraph
@@ -418,7 +507,6 @@
           ]
         ]
       ]
-      v(1em)
     } else {
       // PDF: Original styling
       block(
@@ -445,6 +533,7 @@
     let output-format = output-format-state.get()
     if output-format == "html" {
       // HTML: Wrap all epigraphs in div.epigraph
+      // Note: CSS handles spacing, no need for v() in HTML
       [
         #html.elem("div", attrs: ("class": "epigraph"))[
           #for item in items [
@@ -461,7 +550,6 @@
           ]
         ]
       ]
-      v(1em)
     } else {
       // PDF: Render each epigraph separately
       for item in items {
