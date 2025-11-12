@@ -1,7 +1,7 @@
-// Web-Tufte-Typst Template for Typst
-// A modern Tufte-inspired template supporting both PDF and HTML output
-// Uses official Tufte CSS for web output
-// Uses html.elem() for HTML structure (built-in, no import needed)
+//-------------------------------------------------------------------------------
+// Web-Tufte-Typst: Tufte handout for Typst HTML output
+// Generates HTML compatible with Tufte CSS (https://edwardtufte.github.io/tufte-css/)
+//-------------------------------------------------------------------------------
 
 // Helper function to generate HTML ID from content
 // Simple slug generation: lowercase, replace spaces with hyphens, remove non-alphanumeric
@@ -24,11 +24,11 @@
     .replace(regex("[^a-z0-9-]"), "")     // Remove non-alphanumeric except hyphens
 }
 
+// Note: We are targeting HTML output styled by Tufte CSS, not PDF export, so 
+// some precise font and formatting aspects only matter in print/PDF, but are 
+// handled by the CSS.
 // Configure document-level settings
 #let web-tufte-typst-config(output-format: "html") = {
-  // Typography - matching Tufte style
-  // Note: ET Book font registration requires Typst 0.11+ font discovery
-  // For now, using system fonts that match Tufte style
   set text(
     font: ("Palatino", "Georgia", "Times New Roman"),
     size: 15pt,
@@ -199,7 +199,7 @@
 // Main template function
 #let web-tufte-typst(
   title: none,
-  authors: (),
+  author: none,
   date: none,
   abstract: none,
   output-format: "html",
@@ -211,15 +211,15 @@
   }
   
   // Document metadata
-  let author-names = if type(authors) == array {
-    authors.map(a => if type(a) == dictionary { a.name } else { a })
-  } else if type(authors) == dictionary {
-    (authors.name,)
+  let author-name = if type(author) == dictionary {
+    author.name
+  } else if author != none {
+    str(author)
   } else {
-    (str(authors),)
+    none
   }
   
-  set document(title: title, author: author-names)
+  set document(title: title, author: if author-name != none { (author-name,) } else { () })
   
   // Apply typography
   web-tufte-typst-config(output-format: output-format)
@@ -233,7 +233,6 @@
     // HTML: Generate proper HTML structure using html.elem()
     // Pre-compute values
     let title-id = if title != none { generate-id(title) } else { "" }
-    let author-list = if type(authors) == array { authors } else if authors != () { (authors,) } else { () }
     
     context {
       let title-elem = if title != none {
@@ -242,14 +241,15 @@
         none
       }
       
-      let author-elem = if authors != none and authors != () {
+      let author-elem = if author != none {
         html.elem("p", attrs: ("class": "subtitle"))[
-          #for author in author-list [
-            #if type(author) == dictionary [
-              #author.name
-            ] else [
-              #author
+          #if type(author) == dictionary [
+            #author.name
+            #if "email" in author and author.email != none [
+              #text[ <]#link("mailto:" + author.email)[#author.email]#text[>]
             ]
+          ] else [
+            #author
           ]
         ]
       } else {
@@ -293,22 +293,17 @@
       v(0.5em)
     }
     
-    // Authors
-    if authors != none and authors != () {
+    // Author
+    if author != none {
       set par(first-line-indent: 0em)
-      let author-list = if type(authors) == array { authors } else { (authors,) }
-      
-      for author in author-list {
-        if type(author) == dictionary {
-          text(size: 1.2em, style: "italic")[#author.name]
-          if "affiliation" in author and author.affiliation != none {
-            linebreak()
-            text(size: 1em)[#author.affiliation]
-          }
-        } else {
-          text(size: 1.2em, style: "italic")[#author]
+      if type(author) == dictionary {
+        text(size: 1.2em, style: "italic")[#author.name]
+        if "affiliation" in author and author.affiliation != none {
+          linebreak()
+          text(size: 1em)[#author.affiliation]
         }
-        linebreak()
+      } else {
+        text(size: 1.2em, style: "italic")[#author]
       }
       v(0.5em)
     }
@@ -339,7 +334,7 @@
 }
 
 // Figure function - handles both PDF and HTML
-// Note: For PDF, we need to use a different name to avoid recursion
+// Note: Uses a different name (tufte-figure) to avoid recursion with Typst's built-in figure()
 // Users should use #tufte-figure() in their documents
 #let tufte-figure(path, caption: none, caption-as-marginnote: false) = {
   context {
@@ -352,7 +347,7 @@
       ))[]
       
       if caption-as-marginnote and caption != none {
-        // Use margin note structure inside figure (like reference HTML)
+        // Use margin note structure inside figure (matching Tufte CSS reference implementation)
         margin-note-id-counter.step()
         let id-num = margin-note-id-counter.display()
         let id-str = "mn-fig-" + str(id-num)
@@ -533,7 +528,6 @@
     let output-format = output-format-state.get()
     if output-format == "html" {
       // HTML: Wrap all epigraphs in div.epigraph
-      // Note: CSS handles spacing, no need for v() in HTML
       [
         #html.elem("div", attrs: ("class": "epigraph"))[
           #for item in items [
@@ -564,12 +558,11 @@
   context {
     let output-format = output-format-state.get()
     if output-format == "html" {
-      // HTML: Generate proper span with class="newthought"
       html.elem("span", attrs: ("class": "newthought"))[
         #smallcaps[#content]
       ]
     } else {
-      // PDF: Just apply small caps
+      // PDF: Apply small caps styling
       smallcaps[#content]
     }
   }
@@ -585,7 +578,7 @@
         #content
       ]
     } else {
-      // PDF: Just render the content with sans-serif font
+      // PDF: Render content with sans-serif font
       set text(font: ("Gill Sans", "Arial", "Helvetica", "sans-serif"))
       content
     }
