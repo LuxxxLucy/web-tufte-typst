@@ -3,8 +3,12 @@
 #show: web-tufte-typst.with(
   title: [Typesetting Tufte Handout in Typst to HTML],
   author: (name: "Jialin Lu", email: "luxxxlucy@gmail.com"),
-  date: datetime.today().display(),
+  date: "Nov 11 2025",
 )
+
+*Update (January 28, 2026):* This project is superseded by #link("https://github.com/LuxxxLucy/dual-tufte-typst")[dual-tufte-typst]—write in Typst once, output to _both_ PDF and HTML. One source, two formats. Give it a try!
+
+#line(length: 100%)
 
 No one dislikes #link("https://www.edwardtufte.com/tufte/")[Edward Tufte] and his handout, and for many years I have believed (and still do) that the Tufte handout is the most comfortable visual layout for writing highly efficient documents. It just works.
 

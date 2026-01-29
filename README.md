@@ -1,5 +1,7 @@
 # Web-Tufte-Typst
 
+> **Update (January 28, 2026):** This project is superseded by [dual-tufte-typst](https://github.com/LuxxxLucy/dual-tufte-typst)—write in Typst once, output to *both* PDF and HTML. One source, two formats. Give it a try!
+
 Write Tufte handouts in Typst and export in HTML.
 
 Must see
@@ -46,6 +48,6 @@ Compile to HTML:
 
 - **Section structure**: The original Tufte CSS wraps each logical section of content inside individual `<section>` tags. Due to Typst's structure, the current implementation wraps all content inside a single `<section>` tag. This doesn't affect functionality but differs from the original Tufte CSS structure.
 
-- **Some example missingn**: Some example from the original Tufte CSS documentation is not presented in the `tufte-css-reproduce.typ`
+- **Some example missing**: Some example from the original Tufte CSS documentation is not presented in the `tufte-css-reproduce.typ`
 
 - **toggle button not working** in mobile mode the sidenote would be only popping up when it is toggled.
